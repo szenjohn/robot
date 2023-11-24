@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>5x5 Table</title>
+    <style>
+        body {
+            /* Set background properties */
+
+
+            background-image: url('../static/background.svg');
+            background-size: cover;
+    
+        }    
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        table, th, td {
+            border: 1px solid black;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        img{
+            width: 60px;
+    height: 60px;
+        }
+        .button-container {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .arrow-button {
+            font-size: 18px;
+            margin: 0 10px;
+        }
+        .input-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .input-container input,
+        .input-container select,
+        .input-container button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center;">Toy Robot</h1>
+    <table>
+        {% for row in range(boardSize-1,-1,-1) %}
+            <tr>
+                {% for col in range(boardSize) %}
+                    <td>
+                        <span>
+                            ({{ col }},{{ row }})
+                        </span>
+                        {% set current_x = col %}
+                        {% set current_y = row %}
+                        
+                        {% for current_pos in range(4) %}
+                            {% set img_filename = 'bacterium_' + ['back', 'right', 'front', 'left'][current_pos] + '.png' %}
+                            {% if x==current_x and y==current_y and pos==current_pos %}
+                                <span>
+                                    <img src="{{url_for('static', filename=img_filename)}}">
+                                </span>
+                            {% endif %}
+                            {% set current_pos = current_pos + 1 %}
+                        {% endfor %}
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+    {% if x!=-1 and y!=-1%}
+    <div class="button-container">
+        <button id="left" class="arrow-button-left">&lt;</button>
+        <button id="move" class="arrow-button-move">^</button>
+        <button id="right" class="arrow-button-right">&gt;</button>
+    </div>
+    {% endif %}
+    {% if x==-1 and y==-1 %}
+    <form class="input-container" id="placeForm" action="/place" method="post">
+        <input type="text" name="x" placeholder="Enter x" required>
+        <input type="text" name="y" placeholder="Enter y" required>
+        <select name="option" required>
+            <option value="0">NORTH</option>
+            <option value="1">EAST</option>
+            <option value="2">SOUTH</option>
+            <option value="3">WEST</option>
+        </select>
+        <input type="submit" value="PLACE">
+    </form>
+   
+    {% endif %}
+    <button id="reset">Reset</button>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        var form = document.getElementById('placeForm');
+
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                event.preventDefault(); // Prevents the default form submission
+                // Sending post data to place the toy
+                fetch('/place', {
+                    method: 'POST',
+                    body: new FormData(event.target),
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                })
+                .then(data => {
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            });
+        }
+
+        //Event lister for left button
+        var arrleft = document.getElementById("left")
+        arrleft.addEventListener("click",function(event){
+            fetch('/execute-command', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body:JSON.stringify({command:"LEFT"})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+
+        //Event listener for right button
+        var arrright = document.getElementById("right")
+        arrright.addEventListener("click",function(event){
+            fetch('/execute-command', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body:JSON.stringify({command:"RIGHT"})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    
+                })
+                .then(data => {
+                    window.location.reload();
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+
+        //Event listener for move button
+        var arrmove = document.getElementById("move")
+        arrmove.addEventListener("click",function(event){
+            fetch('/execute-command', {
+                    method: 'POST',
+                    headers: {
+                    'Content-Type': 'application/json'
+                    },
+                    body:JSON.stringify({command:"MOVE"})
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    console.log(data); // Log the response from the server
+                    window.location.reload();
+                    console.log(document.cookie)
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+        var resetbtn = document.getElementById("reset")
+        resetbtn.addEventListener("click",function(event){
+            fetch('/reset', {
+                    method: 'POST',
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    window.location.reload();
+                })
+                .then(data => {
+                    console.log(data); // Log the response from the server
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+        })
+    });
+    </script>
+
+</body>
+</html>

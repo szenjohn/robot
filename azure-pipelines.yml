@@ -1,0 +1,29 @@
+
+
+trigger:
+- master
+
+pool: default
+name: mybuilder
+
+variables:
+  IMAGE_REGISTRY_CONNECTION: 'ACR'
+  IMAGE_REGISTRY: 'toyrobot'
+  IMAGE_REPOSITORY: 'toyrobot.azurecr.io'
+  TAG: '$(Build.BuildId)'
+
+
+stages:
+- stage: DeployDev
+  jobs: 
+  - job: DeployDev
+    steps:
+    - task: AzureRmWebAppDeployment@4
+      inputs:
+        ConnectionType: 'AzureRM'
+        azureSubscription: 'Azure subscription 1 (a7d02b24-4fc3-4616-bd91-529b0f8ba268)'
+        appType: 'webAppContainer'
+        WebAppName: 'toyrobo'
+        DockerNamespace: 'ACR'
+        DockerRepository: 'toyrobot.azurecr.io'
+        DockerImageTag: 'latest'
